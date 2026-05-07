@@ -1,0 +1,102 @@
+import argparse
+import donna/string
+import unittest/should
+
+// parse: long flags
+
+pub fn flag_long_test() -> String:
+  let args = argparse.parse(["--verbose"])
+  argparse.has(args, "verbose") |> should.be_true()
+
+pub fn flag_long_false_test() -> String:
+  let args = argparse.parse(["--verbose"])
+  argparse.has(args, "debug") |> should.be_false()
+
+pub fn named_long_test() -> String:
+  let args = argparse.parse(["--name", "donna"])
+  argparse.get(args, "name") |> should.equal_string("donna")
+
+pub fn named_long_equals_test() -> String:
+  let args = argparse.parse(["--name=donna"])
+  argparse.get(args, "name") |> should.equal_string("donna")
+
+pub fn named_long_missing_test() -> String:
+  let args = argparse.parse(["--verbose"])
+  argparse.get(args, "name") |> should.equal_string("")
+
+// parse: short flags
+
+pub fn flag_short_test() -> String:
+  let args = argparse.parse(["-v"])
+  argparse.has(args, "v") |> should.be_true()
+
+pub fn named_short_test() -> String:
+  let args = argparse.parse(["-o", "out.txt"])
+  argparse.get(args, "o") |> should.equal_string("out.txt")
+
+// parse: positional args
+
+pub fn positional_single_test() -> String:
+  let args = argparse.parse(["file.txt"])
+  case argparse.positional(args):
+    [p] -> should.equal_string(p, "file.txt")
+    _ -> should.fail("expected 1 positional")
+
+pub fn positional_multiple_test() -> String:
+  let args = argparse.parse(["a.txt", "b.txt", "c.txt"])
+  case argparse.positional(args):
+    [a, b, c] ->
+      should.equal_string(a, "a.txt")
+      <> should.equal_string(b, "b.txt")
+      <> should.equal_string(c, "c.txt")
+    _ -> should.fail("expected 3 positionals")
+
+pub fn positional_empty_test() -> String:
+  let args = argparse.parse(["--verbose"])
+  case argparse.positional(args):
+    [] -> ""
+    _ -> should.fail("expected no positionals")
+
+// parse: mixed
+
+pub fn mixed_test() -> String:
+  // Use --key=value form so positional is not consumed as a flag value
+  let args = argparse.parse(["--output=out.txt", "--verbose=true", "input.txt"])
+  should.equal_string(argparse.get(args, "output"), "out.txt")
+  <> should.be_true(argparse.has(args, "verbose"))
+  <> case argparse.positional(args):
+       [p] -> should.equal_string(p, "input.txt")
+       _ -> should.fail("expected 1 positional")
+
+pub fn flag_before_and_after_positional_test() -> String:
+  // Positional between short flags: -v consumes "file.txt" as its value,
+  // so use positional before flags or = form to avoid ambiguity
+  let args = argparse.parse(["file.txt", "-v", "--dry-run"])
+  should.be_true(argparse.has(args, "v"))
+  <> should.be_true(argparse.has(args, "dry-run"))
+  <> case argparse.positional(args):
+       [p] -> should.equal_string(p, "file.txt")
+       _ -> should.fail("expected 1 positional")
+
+// parse: edge cases
+
+pub fn empty_args_test() -> String:
+  let args = argparse.parse([])
+  should.be_false(argparse.has(args, "anything"))
+  <> case argparse.positional(args):
+       [] -> ""
+       _ -> should.fail("expected no positionals")
+
+pub fn flag_next_is_flag_test() -> String:
+  let args = argparse.parse(["--verbose", "--debug"])
+  should.be_true(argparse.has(args, "verbose"))
+  <> should.be_true(argparse.has(args, "debug"))
+
+pub fn named_equals_empty_value_test() -> String:
+  let args = argparse.parse(["--name="])
+  argparse.get(args, "name") |> should.equal_string("")
+
+pub fn multiple_named_test() -> String:
+  let args = argparse.parse(["--host", "localhost", "--port", "8080"])
+  should.equal_string(argparse.get(args, "host"), "localhost")
+  <> should.equal_string(argparse.get(args, "port"), "8080")

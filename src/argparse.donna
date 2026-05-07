@@ -1,0 +1,111 @@
+// argparse — CLI argument parsing for Donna.
+//
+// Parses a List(String) into List(#(String, String)) pairs:
+//   --key value   →  #("key", "value")
+//   --key=value   →  #("key", "value")
+//   --flag        →  #("flag", "true")
+//   -k value      →  #("k", "value")
+//   -k            →  #("k", "true")
+//   positional    →  #("", value)
+//
+// Requires ffi/argv.c to be linked (automatic when depending on this package).
+
+import donna/string
+import donna/list
+
+@external("c", "donna_argv_count")
+fn donna_argv_count() -> Int
+
+@external("c", "donna_argv_get")
+fn donna_argv_get(i: Int) -> String
+
+fn collect_argv(i: Int, count: Int, acc: List(String)) -> List(String):
+  case i >= count:
+    True -> list.reverse(acc)
+    False -> collect_argv(i + 1, count, [donna_argv_get(i), ..acc])
+
+// Parse argv from the running process, skipping argv[0] (program name).
+pub fn from_argv() -> List(#(String, String)):
+  let count = donna_argv_count()
+  parse(collect_argv(1, count, []))
+
+fn key_of(p: #(String, String)) -> String:
+  let #(k, _) = p
+  k
+
+fn val_of(p: #(String, String)) -> String:
+  let #(_, v) = p
+  v
+
+// Parse a list of argument strings into key-value pairs.
+pub fn parse(args: List(String)) -> List(#(String, String)):
+  list.reverse(parse_loop(args, []))
+
+fn parse_loop(args: List(String), acc: List(#(String, String))) -> List(#(String, String)):
+  case args:
+    [] -> acc
+    [arg, ..rest] ->
+      case string.starts_with(arg, "--"):
+        True ->
+          let stripped = string.slice(arg, 2, string.length(arg) - 2)
+          let eq = string.index_of(stripped, "=")
+          case eq == -1:
+            True ->
+              case rest:
+                [] ->
+                  parse_loop([], [#(stripped, "true"), ..acc])
+                [next, ..rest2] ->
+                  case string.starts_with(next, "-"):
+                    True ->
+                      parse_loop(rest, [#(stripped, "true"), ..acc])
+                    False ->
+                      parse_loop(rest2, [#(stripped, next), ..acc])
+            False ->
+              let k = string.slice(stripped, 0, eq)
+              let v = string.slice(stripped, eq + 1, string.length(stripped) - eq - 1)
+              parse_loop(rest, [#(k, v), ..acc])
+        False ->
+          case string.starts_with(arg, "-"):
+            True ->
+              let k = string.slice(arg, 1, string.length(arg) - 1)
+              case rest:
+                [] ->
+                  parse_loop([], [#(k, "true"), ..acc])
+                [next, ..rest2] ->
+                  case string.starts_with(next, "-"):
+                    True ->
+                      parse_loop(rest, [#(k, "true"), ..acc])
+                    False ->
+                      parse_loop(rest2, [#(k, next), ..acc])
+            False ->
+              parse_loop(rest, [#("", arg), ..acc])
+
+// Get the value of a named argument, or "" if not present.
+pub fn get(args: List(#(String, String)), key: String) -> String:
+  case args:
+    [] -> ""
+    [p, ..rest] ->
+      case string.equal(key_of(p), key):
+        True -> val_of(p)
+        False -> get(rest, key)
+
+// Return True if the named argument or flag is present.
+pub fn has(args: List(#(String, String)), key: String) -> Bool:
+  case args:
+    [] -> False
+    [p, ..rest] ->
+      case string.equal(key_of(p), key):
+        True -> True
+        False -> has(rest, key)
+
+// Return all positional arguments (those with no key).
+pub fn positional(args: List(#(String, String))) -> List(String):
+  list.reverse(positional_loop(args, []))
+
+fn positional_loop(args: List(#(String, String)), acc: List(String)) -> List(String):
+  case args:
+    [] -> acc
+    [p, ..rest] ->
+      case string.equal(key_of(p), ""):
+        True -> positional_loop(rest, [val_of(p), ..acc])
+        False -> positional_loop(rest, acc)
