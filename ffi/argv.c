@@ -6,17 +6,19 @@
  * The strong main() here overrides the weak main() in donna_rt.c when this
  * file is linked into a project.
  */
-extern long donna_program_main(void);
+#include <stdint.h>
+
+extern intptr_t donna_program_main(void);
 
 static int    g_argc = 0;
 static char **g_argv = 0;
 
-long donna_argv_count(void) {
-    return (long)g_argc;
+intptr_t donna_argv_count(void) {
+    return (intptr_t)g_argc;
 }
 
-long donna_argv_get(long i) {
-    return (long)g_argv[i];
+intptr_t donna_argv_get(intptr_t i) {
+    return (intptr_t)g_argv[i];
 }
 
 int main(int argc, char **argv) {
