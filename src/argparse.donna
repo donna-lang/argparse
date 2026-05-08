@@ -1,14 +1,18 @@
-// argparse — CLI argument parsing for Donna.
-//
-// Parses a List(String) into List(#(String, String)) pairs:
-//   --key value   →  #("key", "value")
-//   --key=value   →  #("key", "value")
-//   --flag        →  #("flag", "true")
-//   -k value      →  #("k", "value")
-//   -k            →  #("k", "true")
-//   positional    →  #("", value)
-//
-// Requires ffi/argv.c to be linked (automatic when depending on this package).
+//// CLI argument parsing for Donna.
+////
+//// Parses a `List(String)` into `List(#(String, String))` pairs.
+////
+//// ```donna
+//// argparse.parse(["--key", "value"]) == [#("key", "value")]
+//// argparse.parse(["--key=value"]) == [#("key", "value")]
+//// argparse.parse(["--flag"]) == [#("flag", "true")]
+//// argparse.parse(["-k", "value"]) == [#("k", "value")]
+//// argparse.parse(["-k"]) == [#("k", "true")]
+//// argparse.parse(["input.md"]) == [#("", "input.md")]
+//// ```
+////
+//// Requires `ffi/argv.c` to be linked, which happens automatically when
+//// depending on this package.
 
 import donna/string
 import donna/list
