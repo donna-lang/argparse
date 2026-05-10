@@ -28,7 +28,7 @@ fn collect_argv(i: Int, count: Int, acc: List(String)) -> List(String):
     True -> list.reverse(acc)
     False -> collect_argv(i + 1, count, [donna_argv_get(i), ..acc])
 
-// Parse argv from the running process, skipping argv[0] (program name).
+/// Parse argv from the running process, skipping argv[0] (program name).
 pub fn from_argv() -> List(#(String, String)):
   let count = donna_argv_count()
   parse(collect_argv(1, count, []))
@@ -41,7 +41,7 @@ fn val_of(p: #(String, String)) -> String:
   let #(_, v) = p
   v
 
-// Parse a list of argument strings into key-value pairs.
+/// Parse a list of argument strings into key-value pairs.
 pub fn parse(args: List(String)) -> List(#(String, String)):
   list.reverse(parse_loop(args, []))
 
@@ -93,7 +93,7 @@ pub fn get(args: List(#(String, String)), key: String) -> String:
         True -> val_of(p)
         False -> get(rest, key)
 
-// Return True if the named argument or flag is present.
+/// Return True if the named argument or flag is present.
 pub fn has(args: List(#(String, String)), key: String) -> Bool:
   case args:
     [] -> False
@@ -102,7 +102,7 @@ pub fn has(args: List(#(String, String)), key: String) -> Bool:
         True -> True
         False -> has(rest, key)
 
-// Return all positional arguments (those with no key).
+/// Return all positional arguments (those with no key).
 pub fn positional(args: List(#(String, String))) -> List(String):
   list.reverse(positional_loop(args, []))
 
