@@ -45,7 +45,10 @@ fn val_of(p: #(String, String)) -> String:
 pub fn parse(args: List(String)) -> List(#(String, String)):
   list.reverse(parse_loop(args, []))
 
-fn parse_loop(args: List(String), acc: List(#(String, String))) -> List(#(String, String)):
+fn parse_loop(
+  args: List(String),
+  acc: List(#(String, String))
+) -> List(#(String, String)):
   case args:
     [] -> acc
     [arg, ..rest] ->
@@ -84,7 +87,6 @@ fn parse_loop(args: List(String), acc: List(#(String, String))) -> List(#(String
             False ->
               parse_loop(rest, [#("", arg), ..acc])
 
-// Get the value of a named argument, or "" if not present.
 pub fn get(args: List(#(String, String)), key: String) -> String:
   case args:
     [] -> ""
@@ -106,7 +108,10 @@ pub fn has(args: List(#(String, String)), key: String) -> Bool:
 pub fn positional(args: List(#(String, String))) -> List(String):
   list.reverse(positional_loop(args, []))
 
-fn positional_loop(args: List(#(String, String)), acc: List(String)) -> List(String):
+fn positional_loop(
+  args: List(#(String, String)),
+  acc: List(String)
+) -> List(String):
   case args:
     [] -> acc
     [p, ..rest] ->
