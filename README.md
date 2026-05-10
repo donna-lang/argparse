@@ -1,10 +1,10 @@
 # argparse
 
 <img src="https://img.shields.io/badge/Donna-argparse-FF6347?style=for-the-badge" alt="Donna argparse"/>
-
 <a href="https://donna-lang.github.io/argparse/">
   <img src="https://img.shields.io/badge/Docs-Read-2F81F7?style=for-the-badge" alt="Docs - Read"/>
 </a>
+<img src="https://img.shields.io/github/actions/workflow/status/donna-lang/argparse/test.yml?branch=main&label=Test&style=for-the-badge" alt="Test status"/>
 
 CLI argument parsing for the [Donna](https://github.com/donna-lang/donna) programming language.
 
